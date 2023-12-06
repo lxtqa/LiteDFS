@@ -1,0 +1,23 @@
+LiteDFS
+   |------ parameter.py
+   |------ clientNode
+   |            |------ __init__.py
+   |            |______ client.py
+   |------ managementServer
+   |            |------ __init__.py 
+   |            |------ managementServer_pb2.py 
+   |            |------ managementServer_pb2_grpc.py 
+   |            |------ managementServer.proto 
+   |            |______ server.py
+   |------ storageServer
+   |            |------ __init__.py 
+   |            |------ storageServer_pb2.py 
+   |            |------ storageServer_pb2_grpc.py 
+   |            |------ storageServer.proto 
+   |            |______ server.py
+   |_______ DATASTORE
+                |------ __init__.py 
+                |------ storageServer_pb2.py 
+                |------ storageServer_pb2_grpc.py 
+                |------ storageServer.proto 
+                |______ server.py
