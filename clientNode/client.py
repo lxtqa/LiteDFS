@@ -168,17 +168,25 @@ class Client():
                 # 下载文件到本地
                 self.download(fileName)
                 print('Successfully open: '+fileName)
-                # 输出文件信息
-                print('************FILE CONTENT*************')
-                with open(self.root_path+self.cur_path+fileName, 'r') as f:
-                    buf = f.read()
-                    print(buf)
-                f.close()
-                print('*************************************')
             else:
                 print(response.info)
         else:
             print('Can`t find this file.')
+
+    def read(self, fileName):
+        # 输出文件信息
+        print('************FILE CONTENT*************')
+        with open(self.root_path+self.cur_path+fileName, 'r') as f:
+            buf = f.read()
+            print(buf)
+        f.close()
+        print('*************************************')
+
+    def write(self, fileName):
+        new_content = input("Enter the new content: ")
+        with open(self.root_path+self.cur_path+fileName, 'w') as file:
+            file.write(new_content)
+            print(f"Content written to {self.cur_path+fileName}")
             
     def close(self, fileName):
         path = self.cur_path + fileName
@@ -204,9 +212,12 @@ class Client():
         print("cd..: back to previous path")
         print("create: create files locally")
         print("open: open files")
+        print("read: read files")
+        print("write: write files")
         print("close: close files")
         print("mkdir: create folder")
         print("rm: delete files")
+        print("disconnect: disconnect from current storageServer")
         print("quit: quit terminal")
         print("------------------------------------------------")
 
@@ -237,10 +248,16 @@ def startClient(id):
             client.mkdir(command[1])
         elif command[0] == 'open':
             client.open(command[1])
+        elif command[0] == 'read':
+            client.read(command[1])
+        elif command[0] == 'write':
+            client.write(command[1])
         elif command[0] == 'close':
             client.close(command[1])
         elif command[0] == 'create':
             client.create(command[1])
+        elif command[0] == 'disconnect':
+            client.disconnect(command[1])
         elif command[0] == 'quit':
             break
         
