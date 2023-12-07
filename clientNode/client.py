@@ -1,14 +1,12 @@
 import grpc
 import os
 import sys
-import time
 import random
-from concurrent.futures import ThreadPoolExecutor
 # 添加路径
-ROOT_PATH = 'C:/Users/12708/Desktop/workspace/LiteDFS'
+ROOT_PATH = '/Users/yuhaonan/Desktop/cpps/LiteDFS'
 sys.path.append(ROOT_PATH)
-sys.path.append(ROOT_PATH + '\managementServer')
-sys.path.append(ROOT_PATH + '\storageServer')
+sys.path.append(ROOT_PATH + '/managementServer')
+sys.path.append(ROOT_PATH + '/storageServer')
 # 数据服务器rpc
 import storageServer_pb2 as st_pb2
 import storageServer_pb2_grpc as st_pb2_grpc
@@ -68,6 +66,10 @@ class Client():
     
     def ls(self):
         response = self.stStub.ls(st_pb2.file_path(path = self.cur_path))
+        print(response.list)
+
+    def tree(self):
+        response = self.stStub.tree(st_pb2.file_path(path = self.cur_path))
         print(response.list)
 
     def mkdir(self, fileName):
@@ -133,7 +135,7 @@ class Client():
                 response = self.stStub.synUpload(self.getBuffer(rPath, path))
                 print('Successfully upload the file.')
             else:
-                print('Can`t find this file.')
+                print('Can\'t find this file.')
         except Exception as e:
             print(e.args)
             print('Upload failed.')
@@ -145,7 +147,7 @@ class Client():
             # 成功进入文件夹
             self.cur_path += fold + '/'
         else:
-            print('Can`t enter this fold.')
+            print('Can\'t enter this fold.')
 
 
     def cdBack(self):
@@ -171,10 +173,17 @@ class Client():
             else:
                 print(response.info)
         else:
-            print('Can`t find this file.')
+            print('Can\'t find this file.')
 
     def read(self, fileName):
         # 输出文件信息
+        opened = False
+        for file in self.openFile:
+            if self.cur_path+fileName == file:
+                opened = True
+        if not opened:
+            print('You haven\'t open this file.')
+            return
         print('************FILE CONTENT*************')
         with open(self.root_path+self.cur_path+fileName, 'r') as f:
             buf = f.read()
@@ -183,10 +192,18 @@ class Client():
         print('*************************************')
 
     def write(self, fileName):
-        new_content = input("Enter the new content: ")
         with open(self.root_path+self.cur_path+fileName, 'w') as file:
-            file.write(new_content)
-            print(f"Content written to {self.cur_path+fileName}")
+            try:
+                while True:
+                    msg = input("Enter the new content: use ctrl+c to end input\n")
+                    file.write(msg)
+            except KeyboardInterrupt:
+                # 结束写入
+                file.close()
+                print(f"Content written to {self.cur_path+fileName}")
+
+    def disconnect(self):
+        self.selectStorageServer()
             
     def close(self, fileName):
         path = self.cur_path + fileName
@@ -202,7 +219,7 @@ class Client():
             else:
                 print(response.info)
         else:
-            print('You haven`t open this file.')
+            print('You haven\'t open this file.')
 
     def help(self):
         print('client ID: %d'%(self.id))
@@ -234,30 +251,62 @@ def startClient(id):
             client.help()
         elif command[0] == 'ls':
             client.ls()
+        elif command[0] == 'tree':
+            client.tree()
         elif command[0] == 'cd..':
             client.cdBack()
         elif command[0] == 'cd':
-            client.cd(command[1])
+            try:
+                client.cd(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'upload':
-            client.upload(command[1])
+            try:
+                client.upload(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'download':
-            client.download(command[1])
+            try:
+                client.download(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'rm':
-            client.rm(command[1])
+            try:
+                client.rm(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'mkdir':
-            client.mkdir(command[1])
+            try:
+                client.mkdir(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'open':
-            client.open(command[1])
+            try:
+                client.open(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'read':
-            client.read(command[1])
+            try:
+                client.read(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'write':
-            client.write(command[1])
+            try:
+                client.write(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'close':
-            client.close(command[1])
+            try:
+                client.close(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'create':
-            client.create(command[1])
+            try:
+                client.create(command[1])
+            except:
+                print('Command failed!')
         elif command[0] == 'disconnect':
-            client.disconnect(command[1])
+            client.disconnect()
         elif command[0] == 'quit':
             break
         

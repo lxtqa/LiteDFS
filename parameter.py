@@ -9,4 +9,4 @@ _MANAGEMENT_PORT = "8000"
 ################################
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 _BUFFER_SIZE = 1024
-_ROOT_PATH = 'C:/Users/12708/Desktop/workspace/LiteDFS'
+_ROOT_PATH = '/Users/yuhaonan/Desktop/cpps/LiteDFS'

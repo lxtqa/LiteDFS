@@ -5,9 +5,10 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 # 添加路径
 
-ROOT_PATH = 'C:/Users/12708/Desktop/workspace/LiteDFS'
+ROOT_PATH = '/Users/yuhaonan/Desktop/cpps/LiteDFS'
 sys.path.append(ROOT_PATH)
 sys.path.append(ROOT_PATH + '/storageServer')
+sys.path.append(ROOT_PATH + '/managementServer')
 # 数据服务器rpc
 import storageServer_pb2 as st_pb2
 import storageServer_pb2_grpc as st_pb2_grpc

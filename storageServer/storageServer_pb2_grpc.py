@@ -34,6 +34,11 @@ class storageServerStub(object):
                 request_serializer=storageServer__pb2.file_path.SerializeToString,
                 response_deserializer=storageServer__pb2.fileList.FromString,
                 )
+        self.tree = channel.unary_unary(
+                '/storageServer/tree',
+                request_serializer=storageServer__pb2.file_path.SerializeToString,
+                response_deserializer=storageServer__pb2.fileList.FromString,
+                )
         self.mkdir = channel.unary_unary(
                 '/storageServer/mkdir',
                 request_serializer=storageServer__pb2.file_path.SerializeToString,
@@ -82,6 +87,13 @@ class storageServerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def tree(self, request, context):
+        """查询目录
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def mkdir(self, request, context):
         """创建文件夹
         """
@@ -123,6 +135,11 @@ def add_storageServerServicer_to_server(servicer, server):
             ),
             'ls': grpc.unary_unary_rpc_method_handler(
                     servicer.ls,
+                    request_deserializer=storageServer__pb2.file_path.FromString,
+                    response_serializer=storageServer__pb2.fileList.SerializeToString,
+            ),
+            'tree': grpc.unary_unary_rpc_method_handler(
+                    servicer.tree,
                     request_deserializer=storageServer__pb2.file_path.FromString,
                     response_serializer=storageServer__pb2.fileList.SerializeToString,
             ),
@@ -214,6 +231,23 @@ class storageServer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/storageServer/ls',
+            storageServer__pb2.file_path.SerializeToString,
+            storageServer__pb2.fileList.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def tree(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/storageServer/tree',
             storageServer__pb2.file_path.SerializeToString,
             storageServer__pb2.fileList.FromString,
             options, channel_credentials,

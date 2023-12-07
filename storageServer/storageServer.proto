@@ -9,6 +9,8 @@ service storageServer {
     rpc download(file_path) returns (stream fileStream) {}
     // 查询目录
     rpc ls(file_path) returns (fileList) {}
+    // 查询目录
+    rpc tree(file_path) returns (fileList) {}
     // 创建文件夹
     rpc mkdir(file_path) returns (reply) {}
     // 删除文件并同步
