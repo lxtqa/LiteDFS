@@ -72,6 +72,10 @@ class Client():
         response = self.stStub.ls(st_pb2.file_path(path = self.cur_path))
         print(response.list)
 
+    def test(self):
+        #使用ls来测试是否连接
+        self.stStub.ls(st_pb2.file_path(path = self.cur_path))
+
     def tree(self):
         response = self.stStub.tree(st_pb2.file_path(path = self.cur_path))
         print(response.list)
@@ -274,6 +278,14 @@ def startClient(id):
     while True:
         print('$'+client.cur_path+'>', end = '')
         command = input().split()
+        #TODO Heartbeat, if disconnect from storageServer, connect another one
+        try:
+            client.test()
+        except:
+            print("Current server is offline.")
+            print("")
+            client.disconnect()
+            continue
         if len(command) == 0:
             continue
         elif command[0] == 'help':
