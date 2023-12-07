@@ -116,6 +116,8 @@ class Client():
             os.mkdir(path)
         with open(path+fileName, 'w') as f:
             try:
+                msg = input("Enter your file content: use ctrl+c to end input\n")
+                f.write(msg+"\n")
                 while True:
                     msg = input()
                     f.write(msg+"\n")
