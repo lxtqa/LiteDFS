@@ -42,7 +42,11 @@ class Client():
             print('***********************************')
             while True:
                 success = False
+                if len(response.list) == 0:
+                    print('No server online. Client startup failed.')
+                    exit(0)
                 chooseString = input('The id of server to connect:')
+                
                 if chooseString == "":
                     choose = response.list[random.randint(0,len(response.list)-1)].id
                 else:
@@ -114,7 +118,7 @@ class Client():
             try:
                 while True:
                     msg = input()
-                    f.write(msg)
+                    f.write(msg+"\n")
             except KeyboardInterrupt:
                 # 结束写入
                 f.close()
@@ -177,11 +181,7 @@ class Client():
 
     def read(self, fileName):
         # 输出文件信息
-        opened = False
-        for file in self.openFile:
-            if self.cur_path+fileName == file:
-                opened = True
-        if not opened:
+        if self.cur_path+fileName not in self.openFile:
             print('You haven\'t open this file.')
             return
         print('************FILE CONTENT*************')
@@ -194,15 +194,29 @@ class Client():
     def write(self, fileName):
         with open(self.root_path+self.cur_path+fileName, 'w') as file:
             try:
+                msg = input("Enter the new content: use ctrl+c to end input\n")
+                file.write(msg+"\n")
                 while True:
-                    msg = input("Enter the new content: use ctrl+c to end input\n")
-                    file.write(msg)
+                    msg = input()
+                    file.write(msg+"\n")
             except KeyboardInterrupt:
                 # 结束写入
                 file.close()
                 print(f"Content written to {self.cur_path+fileName}")
 
     def disconnect(self):
+        for path in self.openFile:
+            fileName = path.split("/")[-1]
+            # 上传文件
+            self.upload(fileName)
+            # 解锁文件
+            response = self.maStub.unlockFile(ma_pb2.lockInfo(clientId=self.id, filePath=self.cur_path+fileName))
+            if response.done == 1:
+                os.remove(self.root_path+self.cur_path+fileName)
+                print('Successfully close: '+fileName)
+            else:
+                print(response.info)
+        self.openFile.clear()
         self.selectStorageServer()
             
     def close(self, fileName):
@@ -220,6 +234,19 @@ class Client():
                 print(response.info)
         else:
             print('You haven\'t open this file.')
+    
+    def quit(self):
+        for path in self.openFile:
+            fileName = path.split("/")[-1]
+            # 上传文件
+            self.upload(fileName)
+            # 解锁文件
+            response = self.maStub.unlockFile(ma_pb2.lockInfo(clientId=self.id, filePath=self.cur_path+fileName))
+            if response.done == 1:
+                os.remove(self.root_path+self.cur_path+fileName)
+                print('Successfully close: '+fileName)
+            else:
+                print(response.info)
 
     def help(self):
         print('client ID: %d'%(self.id))
@@ -308,6 +335,7 @@ def startClient(id):
         elif command[0] == 'disconnect':
             client.disconnect()
         elif command[0] == 'quit':
+            client.quit()
             break
         
 
