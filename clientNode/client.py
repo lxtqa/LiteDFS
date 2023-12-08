@@ -45,7 +45,12 @@ class Client():
                 if len(response.list) == 0:
                     print('No server online. Client startup failed.')
                     exit(0)
-                chooseString = input('The id of server to connect:')
+                try:
+                    chooseString = input('The id of server to connect:')
+                except KeyboardInterrupt:
+                    self.quit()
+                    print("Client {} is offline".format(self.id))
+                    break
                 
                 if chooseString == "":
                     choose = response.list[random.randint(0,len(response.list)-1)].id
@@ -277,7 +282,12 @@ def startClient(id):
     client = Client(id)
     while True:
         print('$'+client.cur_path+'>', end = '')
-        command = input().split()
+        try:
+            command = input().split()
+        except KeyboardInterrupt:
+            client.quit()
+            print("Client {} is offline".format(id))
+            break
         #TODO Heartbeat, if disconnect from storageServer, connect another one
         try:
             client.test()
