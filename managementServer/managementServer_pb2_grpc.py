@@ -24,10 +24,40 @@ class managementServerStub(object):
                 request_serializer=managementServer__pb2.serverId.SerializeToString,
                 response_deserializer=managementServer__pb2.ma_reply.FromString,
                 )
+        self.getServer = channel.unary_unary(
+                '/managementServer/getServer',
+                request_serializer=managementServer__pb2.filepath.SerializeToString,
+                response_deserializer=managementServer__pb2.serverInfo.FromString,
+                )
         self.getServerList = channel.unary_unary(
                 '/managementServer/getServerList',
                 request_serializer=managementServer__pb2.empty.SerializeToString,
                 response_deserializer=managementServer__pb2.serverList.FromString,
+                )
+        self.ls = channel.unary_unary(
+                '/managementServer/ls',
+                request_serializer=managementServer__pb2.filepath.SerializeToString,
+                response_deserializer=managementServer__pb2.fileList.FromString,
+                )
+        self.tree = channel.unary_unary(
+                '/managementServer/tree',
+                request_serializer=managementServer__pb2.filepath.SerializeToString,
+                response_deserializer=managementServer__pb2.fileList.FromString,
+                )
+        self.mkdir = channel.unary_unary(
+                '/managementServer/mkdir',
+                request_serializer=managementServer__pb2.file.SerializeToString,
+                response_deserializer=managementServer__pb2.ma_reply.FromString,
+                )
+        self.delete = channel.unary_unary(
+                '/managementServer/delete',
+                request_serializer=managementServer__pb2.filepath.SerializeToString,
+                response_deserializer=managementServer__pb2.ma_reply.FromString,
+                )
+        self.create = channel.unary_unary(
+                '/managementServer/create',
+                request_serializer=managementServer__pb2.file.SerializeToString,
+                response_deserializer=managementServer__pb2.ma_reply.FromString,
                 )
         self.lockFile = channel.unary_unary(
                 '/managementServer/lockFile',
@@ -58,8 +88,50 @@ class managementServerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def getServer(self, request, context):
+        """获取当前在线数据服务器信息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def getServerList(self, request, context):
         """获取当前在线数据服务器信息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ls(self, request, context):
+        """查询目录
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def tree(self, request, context):
+        """查询目录
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def mkdir(self, request, context):
+        """创建文件夹
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def delete(self, request, context):
+        """删除文件
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def create(self, request, context):
+        """删除文件
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -92,10 +164,40 @@ def add_managementServerServicer_to_server(servicer, server):
                     request_deserializer=managementServer__pb2.serverId.FromString,
                     response_serializer=managementServer__pb2.ma_reply.SerializeToString,
             ),
+            'getServer': grpc.unary_unary_rpc_method_handler(
+                    servicer.getServer,
+                    request_deserializer=managementServer__pb2.filepath.FromString,
+                    response_serializer=managementServer__pb2.serverInfo.SerializeToString,
+            ),
             'getServerList': grpc.unary_unary_rpc_method_handler(
                     servicer.getServerList,
                     request_deserializer=managementServer__pb2.empty.FromString,
                     response_serializer=managementServer__pb2.serverList.SerializeToString,
+            ),
+            'ls': grpc.unary_unary_rpc_method_handler(
+                    servicer.ls,
+                    request_deserializer=managementServer__pb2.filepath.FromString,
+                    response_serializer=managementServer__pb2.fileList.SerializeToString,
+            ),
+            'tree': grpc.unary_unary_rpc_method_handler(
+                    servicer.tree,
+                    request_deserializer=managementServer__pb2.filepath.FromString,
+                    response_serializer=managementServer__pb2.fileList.SerializeToString,
+            ),
+            'mkdir': grpc.unary_unary_rpc_method_handler(
+                    servicer.mkdir,
+                    request_deserializer=managementServer__pb2.file.FromString,
+                    response_serializer=managementServer__pb2.ma_reply.SerializeToString,
+            ),
+            'delete': grpc.unary_unary_rpc_method_handler(
+                    servicer.delete,
+                    request_deserializer=managementServer__pb2.filepath.FromString,
+                    response_serializer=managementServer__pb2.ma_reply.SerializeToString,
+            ),
+            'create': grpc.unary_unary_rpc_method_handler(
+                    servicer.create,
+                    request_deserializer=managementServer__pb2.file.FromString,
+                    response_serializer=managementServer__pb2.ma_reply.SerializeToString,
             ),
             'lockFile': grpc.unary_unary_rpc_method_handler(
                     servicer.lockFile,
@@ -152,6 +254,23 @@ class managementServer(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
+    def getServer(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/managementServer/getServer',
+            managementServer__pb2.filepath.SerializeToString,
+            managementServer__pb2.serverInfo.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
     def getServerList(request,
             target,
             options=(),
@@ -165,6 +284,91 @@ class managementServer(object):
         return grpc.experimental.unary_unary(request, target, '/managementServer/getServerList',
             managementServer__pb2.empty.SerializeToString,
             managementServer__pb2.serverList.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ls(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/managementServer/ls',
+            managementServer__pb2.filepath.SerializeToString,
+            managementServer__pb2.fileList.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def tree(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/managementServer/tree',
+            managementServer__pb2.filepath.SerializeToString,
+            managementServer__pb2.fileList.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def mkdir(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/managementServer/mkdir',
+            managementServer__pb2.file.SerializeToString,
+            managementServer__pb2.ma_reply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def delete(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/managementServer/delete',
+            managementServer__pb2.filepath.SerializeToString,
+            managementServer__pb2.ma_reply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def create(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/managementServer/create',
+            managementServer__pb2.file.SerializeToString,
+            managementServer__pb2.ma_reply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

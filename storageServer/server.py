@@ -103,32 +103,6 @@ class stServer(st_pb2_grpc.storageServerServicer):
             with open(filePath, 'rb') as f:
                 buf = f.read(parameter._BUFFER_SIZE)
                 yield st_pb2.fileStream(buffer = buf)
-
-    def ls(self, request, context):
-        # 客户端向服务器查询当前目录
-        filePath = self.root_path + request.path
-        dirList = ' '.join(os.listdir(filePath))
-        return st_pb2.fileList(list = dirList)
-
-    def tree(self, request, context):
-        # 客户端向服务器查询当前目录
-        filePath = self.root_path + request.path
-        dirList = "\n".join(self.generate_file_tree(filePath))
-        return st_pb2.fileList(list = dirList)
-    
-    def generate_file_tree(self,start_path, indent=""):
-        tree_info = []
-        tree_info.append(indent + os.path.basename(start_path) + "/")
-        
-        if os.path.isdir(start_path):
-            for item in os.listdir(start_path):
-                item_path = os.path.join(start_path, item)
-                if os.path.isdir(item_path):
-                    tree_info.extend(self.generate_file_tree(item_path, indent + "  "))
-                else:
-                    tree_info.append(indent + "  " + item)
-        
-        return tree_info
     
     def mkdir(self, request, context):
         # 客户端要求创建文件夹
@@ -177,6 +151,14 @@ class stServer(st_pb2_grpc.storageServerServicer):
             print(e.args)
             finish = 0
         return st_pb2.reply(done = finish)
+    
+    def check(self, request, context):
+        # 检查服务器文件
+        path = self.root_path + request.path
+        if os.path.exists(path):
+            return st_pb2.reply(done = 1)
+        else:
+            return st_pb2.reply(done = 0)
 
 # 启动服务器
 def startServer(id, ip, port):

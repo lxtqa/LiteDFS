@@ -19,6 +19,7 @@ import parameter
 class Client():
     def __init__(self, id):
         self.id = id
+        self.stStub = None
         self.root_path = parameter._ROOT_PATH+'/DATASTORE/client_%d/'%(id)
         self.cur_path = ''
         self.openFile = list() # 已打开文件列表
@@ -29,71 +30,76 @@ class Client():
         print('Connect with the Management Server ...')
         maChannel = grpc.insecure_channel(parameter._MANAGEMENT_IP+':'+parameter._MANAGEMENT_PORT)
         self.maStub = ma_pb2_grpc.managementServerStub(maChannel)
-        # 选择存储服务器
-        self.selectStorageServer()
-    
-    def selectStorageServer(self):
-        try:
-            response = self.maStub.getServerList(ma_pb2.empty(e = 1))
-            print('Please choose a storage server:')
-            print('***********************************')
-            for info in response.list:
-                print('Server %d   ip:'%info.id+info.ip+'   port:%d'%info.port)
-            print('***********************************')
-            while True:
-                success = False
-                if len(response.list) == 0:
-                    print('No server online. Client startup failed.')
-                    exit(0)
-                try:
-                    chooseString = input('The id of server to connect:')
-                except KeyboardInterrupt:
-                    self.quit()
-                    print("Client {} is offline".format(self.id))
-                    break
-                
-                if chooseString == "":
-                    choose = response.list[random.randint(0,len(response.list)-1)].id
-                else:
-                    choose = int(chooseString)
-                for info in response.list:
-                    if info.id == choose:
-                        serverIp = info.ip
-                        serverPort = info.port
-                        success = True
-                        break
-                if success:
-                    break
-                print('The idx of server is not online.')
-            stChannel = grpc.insecure_channel(serverIp+':'+str(serverPort))
+
+    def initStServer(self,path):
+        response = self.maStub.getServer(ma_pb2.filepath(path = path))
+        if response.ip != -1:
+            stChannel = grpc.insecure_channel(response.ip+':'+str(response.port))
             self.stStub = st_pb2_grpc.storageServerStub(stChannel)
-            self.server_root_path = ROOT_PATH+'/DATASTORE/storage_%d/'%(choose)
-            print('Client %d'%self.id + ' successfully startup and connect with server %d'%choose)
-        except Exception as e:
-            print(e.args)
-            print('Client startup failed.')
+    
+    # def selectStorageServer(self):
+    #     try:
+    #         response = self.maStub.getServerList(ma_pb2.empty(e = 1))
+    #         print('Please choose a storage server:')
+    #         print('***********************************')
+    #         for info in response.list:
+    #             print('Server %d   ip:'%info.id+info.ip+'   port:%d'%info.port)
+    #         print('***********************************')
+    #         while True:
+    #             success = False
+    #             if len(response.list) == 0:
+    #                 print('No server online. Client startup failed.')
+    #                 exit(0)
+    #             try:
+    #                 chooseString = input('The id of server to connect:')
+    #             except KeyboardInterrupt:
+    #                 self.quit()
+    #                 print("Client {} is offline".format(self.id))
+    #                 break
+                
+    #             if chooseString == "":
+    #                 choose = response.list[random.randint(0,len(response.list)-1)].id
+    #             else:
+    #                 choose = int(chooseString)
+    #             for info in response.list:
+    #                 if info.id == choose:
+    #                     serverIp = info.ip
+    #                     serverPort = info.port
+    #                     success = True
+    #                     break
+    #             if success:
+    #                 break
+    #             print('The idx of server is not online.')
+    #         print(serverIp+':'+str(serverPort))
+    #         stChannel = grpc.insecure_channel(serverIp+':'+str(serverPort))
+    #         self.stStub = st_pb2_grpc.storageServerStub(stChannel)
+    #         self.server_root_path = ROOT_PATH+'/DATASTORE/storage_%d/'%(choose)
+    #         print('Client %d'%self.id + ' successfully startup and connect with server %d'%choose)
+    #     except Exception as e:
+    #         print(e.args)
+    #         print('Client startup failed.')
     
     def ls(self):
-        response = self.stStub.ls(st_pb2.file_path(path = self.cur_path))
+        response = self.maStub.ls(ma_pb2.filepath(path = self.cur_path))
         print(response.list)
 
-    def test(self):
-        #使用ls来测试是否连接
-        self.stStub.ls(st_pb2.file_path(path = self.cur_path))
-
     def tree(self):
-        response = self.stStub.tree(st_pb2.file_path(path = self.cur_path))
+        response = self.maStub.tree(ma_pb2.filepath(path = self.cur_path))
         print(response.list)
 
     def mkdir(self, fileName):
+        self.initStServer(self.cur_path)
         response = self.stStub.mkdir(st_pb2.file_path(path = self.cur_path+fileName))
+        response = self.maStub.mkdir(ma_pb2.file(path = self.cur_path,name = fileName))
         if response.done:
             print('Successfully create dir:%s.'%fileName)
         else:
             print('Create failed.')
     
     def rm(self, fileName):
-        response = self.stStub.synDelete(st_pb2.file_path(path = self.cur_path+fileName))
+        self.initStServer(self.cur_path+fileName)
+        self.stStub.synDelete(st_pb2.file_path(path = self.cur_path+fileName))
+        response = self.maStub.delete(ma_pb2.filepath(path = self.cur_path+fileName))
         if response.done:
             path = self.root_path+self.cur_path+fileName
             if os.path.exists(path):
@@ -103,6 +109,11 @@ class Client():
             print('Delete failed.')
     
     def download(self, fileName):
+        self.initStServer(self.cur_path+fileName)
+        response = self.maStub.getServer(ma_pb2.filepath(path = self.cur_path+fileName))
+        stChannel = grpc.insecure_channel(response.ip+':'+str(response.port))
+        self.stStub = st_pb2_grpc.storageServerStub(stChannel)
+        # self.server_root_path = ROOT_PATH+'/DATASTORE/storage_%d/'%(response.info.id)
         try:
             response = self.stStub.download(st_pb2.file_path(path = self.cur_path+fileName))
             # 二进制打开文件用于写入
@@ -134,6 +145,8 @@ class Client():
                 # 结束写入
                 f.close()
         print('Successfully create file:'+fileName)
+        self.initStServer(self.cur_path)
+        self.maStub.create(ma_pb2.file(path = self.cur_path,name = fileName))
         self.upload(fileName)
 
     def getBuffer(self, rPath, path):
@@ -146,6 +159,7 @@ class Client():
         try:
             path = self.root_path + self.cur_path + fileName # 本地绝对路径
             rPath = self.cur_path + fileName # 相对路径
+            self.initStServer(self.cur_path)
             if os.path.exists(path):
                 response = self.stStub.synUpload(self.getBuffer(rPath, path))
                 print('Successfully upload the file.')
@@ -156,9 +170,13 @@ class Client():
             print('Upload failed.')
     
     def cd(self, fold):
-        response = self.stStub.ls(st_pb2.file_path(path = self.cur_path))
-        path = self.server_root_path + self.cur_path+fold
-        if fold in response.list and os.path.isdir(path):
+        ## TODO
+        if fold == "..":
+            self.cdBack()
+            return
+        response = self.maStub.ls(st_pb2.file_path(path = self.cur_path))
+        #path = self.server_root_path + self.cur_path+fold
+        if fold in response.list:# and os.path.isdir(path):
             # 成功进入文件夹
             self.cur_path += fold + '/'
         else:
@@ -174,8 +192,8 @@ class Client():
             print('Alreay in root dir.')
 
     def open(self, fileName):
-        response = self.stStub.ls(st_pb2.file_path(path = self.cur_path))
-        if fileName in response.list and os.path.isfile(self.server_root_path+self.cur_path+fileName):
+        response = self.maStub.ls(st_pb2.file_path(path = self.cur_path))
+        if fileName in response.list:# and os.path.isfile(self.server_root_path+self.cur_path+fileName):
             # 确定文件存在且是文件而非文件夹
             # 对文件进行上锁
             response = self.maStub.lockFile(ma_pb2.lockInfo(clientId=self.id, filePath=self.cur_path+fileName))
@@ -214,21 +232,6 @@ class Client():
                 # 结束写入
                 file.close()
                 print(f"Content written to {self.cur_path+fileName}")
-
-    def disconnect(self):
-        for path in self.openFile:
-            fileName = path.split("/")[-1]
-            # 上传文件
-            self.upload(fileName)
-            # 解锁文件
-            response = self.maStub.unlockFile(ma_pb2.lockInfo(clientId=self.id, filePath=self.cur_path+fileName))
-            if response.done == 1:
-                os.remove(self.root_path+self.cur_path+fileName)
-                print('Successfully close: '+fileName)
-            else:
-                print(response.info)
-        self.openFile.clear()
-        self.selectStorageServer()
             
     def close(self, fileName):
         path = self.cur_path + fileName
@@ -272,7 +275,6 @@ class Client():
         print("close: close files")
         print("mkdir: create folder")
         print("rm: delete files")
-        print("disconnect: disconnect from current storageServer")
         print("quit: quit terminal")
         print("------------------------------------------------")
 
@@ -288,14 +290,6 @@ def startClient(id):
             client.quit()
             print("Client {} is offline".format(id))
             break
-        #TODO Heartbeat, if disconnect from storageServer, connect another one
-        try:
-            client.test()
-        except:
-            print("Current server is offline.")
-            print("")
-            client.disconnect()
-            continue
         if len(command) == 0:
             continue
         elif command[0] == 'help':
@@ -307,55 +301,25 @@ def startClient(id):
         elif command[0] == 'cd..':
             client.cdBack()
         elif command[0] == 'cd':
-            try:
-                client.cd(command[1])
-            except:
-                print('Command failed!')
+            client.cd(command[1])
         elif command[0] == 'upload':
-            try:
-                client.upload(command[1])
-            except:
-                print('Command failed!')
+            client.upload(command[1])
         elif command[0] == 'download':
-            try:
-                client.download(command[1])
-            except:
-                print('Command failed!')
+            client.download(command[1])
         elif command[0] == 'rm':
-            try:
-                client.rm(command[1])
-            except:
-                print('Command failed!')
+            client.rm(command[1])
         elif command[0] == 'mkdir':
-            try:
-                client.mkdir(command[1])
-            except:
-                print('Command failed!')
+            client.mkdir(command[1])
         elif command[0] == 'open':
-            try:
-                client.open(command[1])
-            except:
-                print('Command failed!')
+            client.open(command[1])
         elif command[0] == 'read':
-            try:
-                client.read(command[1])
-            except:
-                print('Command failed!')
+            client.read(command[1])
         elif command[0] == 'write':
-            try:
-                client.write(command[1])
-            except:
-                print('Command failed!')
+            client.write(command[1])
         elif command[0] == 'close':
-            try:
-                client.close(command[1])
-            except:
-                print('Command failed!')
+            client.close(command[1])
         elif command[0] == 'create':
-            try:
-                client.create(command[1])
-            except:
-                print('Command failed!')
+            client.create(command[1])
         elif command[0] == 'disconnect':
             client.disconnect()
         elif command[0] == 'quit':

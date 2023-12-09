@@ -6,7 +6,19 @@ service managementServer {
     // 数据服务器下线后向管理服务器登记注销
     rpc serverOffline(serverId) returns (ma_reply) {}
     // 获取当前在线数据服务器信息
+    rpc getServer(filepath) returns (serverInfo) {}
+    // 获取当前在线数据服务器信息
     rpc getServerList(empty) returns (serverList) {}
+    // 查询目录
+    rpc ls(filepath) returns (fileList) {}
+    // 查询目录
+    rpc tree(filepath) returns (fileList) {}
+    // 创建文件夹
+    rpc mkdir(file) returns (ma_reply) {}
+    // 删除文件
+    rpc delete(filepath) returns (ma_reply) {}
+    // 删除文件
+    rpc create(file) returns (ma_reply) {}
     // 给文件上锁
     rpc lockFile(lockInfo) returns (lockReply) {}
     // 给文件解锁
@@ -35,6 +47,15 @@ message lockInfo { // 包含客户端id和文件路径
     string filePath = 2;
 }
 
+message filepath { // 文件地址
+    string path = 1;
+}
+
+message file { // 文件名称
+    string path = 1;
+    string name = 2;
+}
+
 /*******************************/
 /*         RETURN_VALUE        */   
 /*******************************/
@@ -49,4 +70,8 @@ message serverList { // 返回在线服务器信息列表
 message lockReply { // 返回文件上锁信息
     bool done = 1;
     string info = 2;
+}
+
+message fileList { // rpc返回文件目录表
+    string list = 1;
 }

@@ -7,16 +7,14 @@ service storageServer {
     rpc upload(stream upload_file) returns (reply) {}
     // 从服务器下载文件
     rpc download(file_path) returns (stream fileStream) {}
-    // 查询目录
-    rpc ls(file_path) returns (fileList) {}
-    // 查询目录
-    rpc tree(file_path) returns (fileList) {}
     // 创建文件夹
     rpc mkdir(file_path) returns (reply) {}
     // 删除文件并同步
     rpc synDelete(file_path) returns (reply) {}
     // 删除文件
     rpc delete(file_path) returns (reply) {}
+    // 删除文件
+    rpc check(file_path) returns (reply) {}
 }
 
 /*******************************/
@@ -40,8 +38,4 @@ message reply { // rpc返回值告知操作成功与否
 
 message fileStream { // rpc返回文件数据流
     bytes buffer = 1;
-}
-
-message fileList { // rpc返回文件目录表
-    string list = 1;
 }
