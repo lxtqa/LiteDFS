@@ -1,7 +1,6 @@
 import grpc
 import os
 import sys
-import random
 # 添加路径
 ROOT_PATH = '/Users/yuhaonan/Desktop/cpps/LiteDFS'
 sys.path.append(ROOT_PATH)
@@ -31,64 +30,26 @@ class Client():
         maChannel = grpc.insecure_channel(parameter._MANAGEMENT_IP+':'+parameter._MANAGEMENT_PORT)
         self.maStub = ma_pb2_grpc.managementServerStub(maChannel)
 
+    #初始化dataserver，向managementServer发出请求，由managementServer返回可用的dataserver信息
     def initStServer(self,path):
         response = self.maStub.getServer(ma_pb2.filepath(path = path))
         if response.ip != -1:
             stChannel = grpc.insecure_channel(response.ip+':'+str(response.port))
             self.stStub = st_pb2_grpc.storageServerStub(stChannel)
     
-    # def selectStorageServer(self):
-    #     try:
-    #         response = self.maStub.getServerList(ma_pb2.empty(e = 1))
-    #         print('Please choose a storage server:')
-    #         print('***********************************')
-    #         for info in response.list:
-    #             print('Server %d   ip:'%info.id+info.ip+'   port:%d'%info.port)
-    #         print('***********************************')
-    #         while True:
-    #             success = False
-    #             if len(response.list) == 0:
-    #                 print('No server online. Client startup failed.')
-    #                 exit(0)
-    #             try:
-    #                 chooseString = input('The id of server to connect:')
-    #             except KeyboardInterrupt:
-    #                 self.quit()
-    #                 print("Client {} is offline".format(self.id))
-    #                 break
-                
-    #             if chooseString == "":
-    #                 choose = response.list[random.randint(0,len(response.list)-1)].id
-    #             else:
-    #                 choose = int(chooseString)
-    #             for info in response.list:
-    #                 if info.id == choose:
-    #                     serverIp = info.ip
-    #                     serverPort = info.port
-    #                     success = True
-    #                     break
-    #             if success:
-    #                 break
-    #             print('The idx of server is not online.')
-    #         print(serverIp+':'+str(serverPort))
-    #         stChannel = grpc.insecure_channel(serverIp+':'+str(serverPort))
-    #         self.stStub = st_pb2_grpc.storageServerStub(stChannel)
-    #         self.server_root_path = ROOT_PATH+'/DATASTORE/storage_%d/'%(choose)
-    #         print('Client %d'%self.id + ' successfully startup and connect with server %d'%choose)
-    #     except Exception as e:
-    #         print(e.args)
-    #         print('Client startup failed.')
-    
+    #从managementServer中查询文件树，返回结果
     def ls(self):
         response = self.maStub.ls(ma_pb2.filepath(path = self.cur_path))
         print(response.list)
 
+    #从managementServer中查询文件树，返回结果
     def tree(self):
         response = self.maStub.tree(ma_pb2.filepath(path = self.cur_path))
         print(response.list)
 
     def mkdir(self, fileName):
         self.initStServer(self.cur_path)
+        #分别在dataServer中和managementServer所维护的目录下mkdir
         response = self.stStub.mkdir(st_pb2.file_path(path = self.cur_path+fileName))
         response = self.maStub.mkdir(ma_pb2.file(path = self.cur_path,name = fileName))
         if response.done:
@@ -98,6 +59,7 @@ class Client():
     
     def rm(self, fileName):
         self.initStServer(self.cur_path+fileName)
+        #分别在dataServer中和managementServer所维护的目录下delete
         self.stStub.synDelete(st_pb2.file_path(path = self.cur_path+fileName))
         response = self.maStub.delete(ma_pb2.filepath(path = self.cur_path+fileName))
         if response.done:
@@ -110,10 +72,6 @@ class Client():
     
     def download(self, fileName):
         self.initStServer(self.cur_path+fileName)
-        response = self.maStub.getServer(ma_pb2.filepath(path = self.cur_path+fileName))
-        stChannel = grpc.insecure_channel(response.ip+':'+str(response.port))
-        self.stStub = st_pb2_grpc.storageServerStub(stChannel)
-        # self.server_root_path = ROOT_PATH+'/DATASTORE/storage_%d/'%(response.info.id)
         try:
             response = self.stStub.download(st_pb2.file_path(path = self.cur_path+fileName))
             # 二进制打开文件用于写入
@@ -170,13 +128,11 @@ class Client():
             print('Upload failed.')
     
     def cd(self, fold):
-        ## TODO
         if fold == "..":
             self.cdBack()
             return
         response = self.maStub.ls(st_pb2.file_path(path = self.cur_path))
-        #path = self.server_root_path + self.cur_path+fold
-        if fold in response.list:# and os.path.isdir(path):
+        if fold in response.list:
             # 成功进入文件夹
             self.cur_path += fold + '/'
         else:
@@ -193,7 +149,7 @@ class Client():
 
     def open(self, fileName):
         response = self.maStub.ls(st_pb2.file_path(path = self.cur_path))
-        if fileName in response.list:# and os.path.isfile(self.server_root_path+self.cur_path+fileName):
+        if fileName in response.list:
             # 确定文件存在且是文件而非文件夹
             # 对文件进行上锁
             response = self.maStub.lockFile(ma_pb2.lockInfo(clientId=self.id, filePath=self.cur_path+fileName))

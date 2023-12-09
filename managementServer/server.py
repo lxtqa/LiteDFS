@@ -211,7 +211,6 @@ class maServer(st_pb2_grpc.storageServerServicer):
                 for server in self.serverList:
                     if server.id == stStub[0]:
                         return ma_pb2.serverInfo(id = server.id, ip = server.ip, port = server.port)
-                #### TODO
         return ma_pb2.serverInfo(id = -1, ip = -1, port = -1)
             
     def getServerList(self, request, context):
