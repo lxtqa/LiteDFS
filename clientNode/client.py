@@ -177,6 +177,9 @@ class Client():
         print('*************************************')
 
     def write(self, fileName):
+        if self.cur_path+fileName not in self.openFile:
+            print('You haven\'t open this file.')
+            return
         with open(self.root_path+self.cur_path+fileName, 'w') as file:
             try:
                 msg = input("Enter the new content: use ctrl+c to end input\n")
